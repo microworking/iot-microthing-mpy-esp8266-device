@@ -6,7 +6,6 @@ import ustruct as struct
 from ubinascii import hexlify
 
 class MQTTException(Exception):
-    print(Exception)
     pass
 
 class MQTTClient:
@@ -58,14 +57,14 @@ class MQTTClient:
 
     def connect(self, clean_session=True):
         self.sock = socket.socket()
-        #addr = socket.getaddrinfo(self.server, self.port)[0][-1]
-        addr = socket.getaddrinfo(b'80db6d87c8a343e4985334eb98a49777.s1.eu.hivemq.cloud', 8883)[0][-1]
+        addr = socket.getaddrinfo(self.server, self.port)[0][-1]
         self.sock.connect(addr)
         if self.ssl:
             import ussl
             self.sock = ussl.wrap_socket(self.sock, **self.ssl_params)
         premsg = bytearray(b"\x10\0\0\0\0\0")
         msg = bytearray(b"\x04MQTT\x04\x02\0\0")
+
         sz = 10 + 2 + len(self.client_id)
         msg[6] = clean_session << 1
         if self.user is not None:
@@ -80,34 +79,28 @@ class MQTTClient:
             msg[6] |= 0x4 | (self.lw_qos & 0x1) << 3 | (self.lw_qos & 0x2) << 3
             msg[6] |= self.lw_retain << 5
 
-        #i = 1
-        #while sz > 0x7f:
-        #    premsg[i] = (sz & 0x7f) | 0x80
-        #    sz >>= 7
-        #    i += 1
-        #premsg[i] = sz
+        i = 1
+        while sz > 0x7f:
+            premsg[i] = (sz & 0x7f) | 0x80
+            sz >>= 7
+            i += 1
+        premsg[i] = sz
 
-        #self.sock.write(premsg, i + 2)
-        #self.sock.write(msg)
+        self.sock.write(premsg, i + 2)
+        self.sock.write(msg)
         #print(hex(len(msg)), hexlify(msg, ":"))
-        #self._send_str(self.client_id)
-        #if self.lw_topic:
-        #    self._send_str(self.lw_topic)
-        #    self._send_str(self.lw_msg)
-        #if self.user is not None:
-        #    self._send_str(self.user)
-        #    self._send_str(self.pswd)
-        
-        #resp = self.sock.read(4)
-        #resp = self.sock.read(2)
-        #print(resp)
-        #assert resp[0] == 0x20 and resp[1] == 0x02
-        #if resp[3] != 0:
-        #if resp[0] != 0:
-            #raise MQTTException(resp[3])
-            #raise MQTTException(resp[0])
-        #return resp[0] & 1
-        #return resp
+        self._send_str(self.client_id)
+        if self.lw_topic:
+            self._send_str(self.lw_topic)
+            self._send_str(self.lw_msg)
+        if self.user is not None:
+            self._send_str(self.user)
+            self._send_str(self.pswd)
+        resp = self.sock.read(4)
+        assert resp[0] == 0x20 and resp[1] == 0x02
+        if resp[3] != 0:
+            raise MQTTException(resp[3])
+        return resp[2] & 1
 
     def disconnect(self):
         self.sock.write(b"\xe0\0")
@@ -212,7 +205,5 @@ class MQTTClient:
     def check_msg(self):
         self.sock.setblocking(False)
         return self.wait_msg()
-
-
 
 

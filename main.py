@@ -1,41 +1,1 @@
-#print(wlan.scan())             # scan for access points
-Beep.init()
-HttpHandler.do_connect()
-Beep.conected()
-
-try:
-  mqttclient = connect_and_subscribe()
-except OSError as e:
-  print(e)
-  restart_and_reconnect()
-  mqttclient = connect_and_subscribe()
-
-flowc = 0
-mqttclient.set_callback(new_message_handler)
-
-sensor = Pin(0, Pin.IN, Pin.PULL_UP)
-while True:
-  try:
-    mqttclient.check_msg()
-    #schedule.check_time()
-    #sensors.check_state()
-    
-    if sensor.value() == 0 and flowc == 1:
-      print('sensor == 0 and flowc == 1')
-      flowc = 0
-      #time.sleep_ms(500)
-    
-    if sensor.value() == 1 and flowc == 0:
-      print('sensor == 1 and flowc == 0')
-      flowc = 1
-      #time.sleep_ms(500)
-    
-  except OSError as e:
-    restart_and_reconnect()
-
-# TODO: tratar o erro no http_get OSError -2 e ECCONABORTED
-# TODO: descobrir como encriptografar o token e o chatid
-# TODO: criar rotinas de startup (colocar ssid, pass, token, chatid, nome, local e servidor http 80 em modo AP)
-# from machine import WDT #TODO: nao da para passar um valor de timeout para o watch dog (implementar?)
-# wdt = WDT()
-# wdt.feed()
+#wifi_ssid = 'MicroDevice'#wifi_pass = '229629763'wifi_ssid = 'tatajewel'wifi_pass = 'mimosa2020'#wifi_ssid = 'VIVOFIBRA-307E'#wifi_pass = '57601b307e'mqtt = Nonemqtt_client = Nonemqtt_server = b'mqtt.flespi.io'mqtt_port = 1883mqtt_user = b"8o1nx9zfTFUiAkYdgWR3GUlX9fxpREFOQw1dtoidR0jfa5ihR0alIj9GmuV4YrIE"mqtt_pass = b''mqtt_client_id = ubinascii.hexlify(machine.unique_id())mqtt_topic_sub = b'microworking/telegram-iot/microthingv1/broker'mqtt_topic_pub = b'microworking/telegram-iot/microthingv1/cloud'mqtt_ssl = Falsemqtt_counter = 0mqtt_last_message = 0mqtt_keepalive = 4000mqtt_message_interval = 5flow_control = 0health_verify_cycle = 30000process_verify_cycle = 2000sensor = Pin(0, Pin.IN, Pin.PULL_UP)debug_mode = Truesound_enanble = Truebroadcast_enable = Truebuzzer = Pin(2, Pin.IN, Pin.PULL_UP)gpio0_state_0_message = 'O dispositivo %s esta detectando agua'    gpio0_state_1_message = 'O dispositivo %s nao esta detectando agua'gpio2_state_1_message = 'O dispositivo %s foi acionado pelo usuario %'gpio2_state_0_message = 'O dispositivo %s foi desligado pelo usuario %'no_peripheral_message = 'Ola %s, o dispositivo %s nao possui perifericos para controlar'restart_message = 'O dispositivo %s sera reiniciado pelo usuario %s...por favor aguarde'test_message = 'Ola %s, %s diz: beeeep! ;-)'debug_mode_message = 'Debug mode %s para o dispositivo %s pelo usuario %s'sound_enanble_message = 'Som %s para o dispositivo %s pelo usuario %s'broadcast_enable_message = 'Broadcast %s para o dispositivo %s pelo usuario %s'action = ActionResponse()action.identity_token = '1319896e58214f5698456516fa9b79a9636739170'action.uid = Helper.get_uid()action.gpio = 0action.action = 'broadcast'action.owner = 'device ' + Helper.get_uid()action.update_id = 0action.chat_id = 5566895926action.message_id = 0action.peripheral = Helper.get_uid()action.date = '2022-10-28T05:17:24.0656626Z'def initialize():  global mqtt, mqtt_client, action, debug_mode, sound_enanble  try:    if debug_mode: print('Inicializing device %s...' % (Helper.get_uid()))    if sound_enanble: Beep.init()    health_check_stop()    HttpHandler.do_connect()    if sound_enanble: Beep.http_conected()    mqtt = MqttService()    mqtt_client = mqtt.connect_and_subscribe()    if sound_enanble: Beep.mqtt_conected()    if debug_mode:      action.message = 'Inicializing device %s...' % (Helper.get_uid())      mqtt.publish_handler(action)    health_check_start()  except Exception as exception:    if sound_enanble: Beep.error()    if debug_mode: health_check_stop()    if debug_mode: print('Exception thrown in initialize: ' + str(exception))initialize()try:  while True:    try:      if sensor.value() == 0 and flow_control == 1:        flow_control = 0        action.message = gpio0_state_0_message % (Helper.get_uid())        if sound_enanble: Beep.request()        mqtt.publish_handler(action)        if debug_mode: print('State value for GPIO 0 is 0')      if sensor.value() == 1 and flow_control == 0:        flow_control = 1        action.message = gpio0_state_1_message % (Helper.get_uid())        if sound_enanble: Beep.request()        mqtt.publish_handler(action)        if debug_mode: print('State value for GPIO 0 is 1')      mqtt_client.check_msg()    except Exception as exception:      if sound_enanble: Beep.error()      if debug_mode:        if debug_mode: print('Exception thrown in main loop: ' + str(exception))         #initialize()      else:        if sound_enanble: Beep.error()        #initialize()except Exception as exception:  if sound_enanble: Beep.error()  if debug_mode:    print('Exception thrown in main flow: ' + str(exception))  else:    time.sleep(5)    #machine.reset()

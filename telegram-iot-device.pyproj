@@ -30,6 +30,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="commonhelper.py" />
+    <Compile Include="healthcheck.py" />
     <Compile Include="httphandler.py" />
     <Compile Include="httpservice.py" />
     <Compile Include="main.py" />
